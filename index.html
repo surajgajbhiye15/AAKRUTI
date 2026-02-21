@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AAKRUTI Innovation Competition - Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        html, body { margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; height: 100vh; width: 100vw; overflow: hidden; background: url('https://www.solidworks.com/sites/default/filesd10/styles/bg_large/public/2025-04/AAKRUTI-2025-Student-Journey-SOLIDWORKS.png.webp?itok=XxEt4r_s') no-repeat center center; background-size: cover; }
+        .fade-overlay { width: 100%; height: 100%; background: rgba(255,255,255,0.85); backdrop-filter: blur(3px); display: flex; flex-direction: column; }
+        
+        header { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; padding: 10px 20px; position: relative; }
+        header h1 { margin: 0; font-size: 24px; color: #FF0000; text-transform: uppercase; letter-spacing: 1px; }
+        .top-logo { position: absolute; right: 20px; top: 8px; }
+        .top-logo img { height: 35px; }
+
+        .container { flex: 1; display: flex; flex-direction: row; padding: 15px 25px; gap: 20px; overflow: hidden; }
+
+        /* LEFT PANEL: Table and Charts */
+        .left-panel { flex: 2; display: flex; flex-direction: column; gap: 15px; background: rgba(255,255,255,0.9); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
+        
+        .country-table-section { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+        .country-scroll { flex: 1; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { background-color: #f8f9fa; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid #dee2e6; padding: 12px; font-weight: bold; color: #005685; }
+        td { border-bottom: 1px solid #eee; padding: 10px; text-align: center; }
+
+        .bottom-dashboard { flex: 0 0 220px; display: flex; gap: 15px; margin-top: 10px; }
+        .chart-card { flex: 1; background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .chart-container { width: 100%; height: 160px; }
+
+        /* RIGHT PANEL: Start Action */
+        .right-panel { flex: 0.8; display: flex; align-items: center; justify-content: center; }
+        .start-btn { padding: 20px 40px; font-size: 22px; font-weight: bold; background-color: #005685; color: white; border: none; border-radius: 12px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .start-btn:hover { background-color: #003f63; transform: scale(1.05); }
+
+        .footer-banner { flex: 0 0 70px; width: 100%; background: white; border-top: 1px solid #ccc; display: flex; align-items: center; }
+        .footer-banner img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* MODALS */
+        .modal-overlay { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-content { background: white; padding: 30px; border-radius: 15px; width: 420px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-content input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; text-align: center; }
+        .team-list-container { max-height: 250px; overflow-y: auto; margin-top: 15px; border: 1px solid #eee; border-radius: 8px; text-align: left; }
+        .team-item { padding: 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: 0.2s; }
+        .team-item:hover { background-color: #f0f8ff; color: #005685; font-weight: bold; }
+        .modal-btn { background-color: #005685; color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 15px; width: 100%; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div class="fade-overlay">
+    <header>
+        <h1>AAKRUTI Innovation Competition</h1>
+        <div class="top-logo"><img src="https://github.com/surajgajbhiye15/index/blob/main/Aakruti%20Logo.png?raw=true"></div>
+    </header>
+
+    <div class="container">
+        <div class="left-panel">
+            <div class="country-table-section">
+                <h3 style="margin: 0 0 10px 0;">Evaluated Projects per Country</h3>
+                <div class="country-scroll">
+                    <table id="countryTable">
+                        <thead>
+                            <tr><th>Country</th><th>No. of Projects</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bottom-dashboard">
+                <div class="chart-card">
+                    <h4 style="margin:0 0 5px 0; font-size: 14px;">Projects by Theme</h4>
+                    <div class="chart-container"><canvas id="themeChart"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <h4 style="margin:0 0 5px 0; font-size: 14px;">Evaluation Progress</h4>
+                    <div class="chart-container"><canvas id="progressChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <button class="start-btn" onclick="openLoginModal()">Start Evaluation</button>
+        </div>
+    </div>
+
+    <footer class="footer-banner">
+        <img src="https://github.com/surajgajbhiye15/index/blob/main/image2.png?raw=true">
+    </footer>
+</div>
+
+<div id="loginModal" class="modal-overlay">
+    <div class="modal-content">
+        <img src="https://github.com/surajgajbhiye15/index/blob/main/Aakruti%20Logo.png?raw=true" height="50">
+        <h2>Evaluator Login</h2>
+        <input type="text" id="evalFullName" placeholder="Enter Full Name">
+        <input type="text" id="evalTrigram" placeholder="Enter Trigram (e.g. ABC)">
+        <button class="modal-btn" id="fetchBtn" onclick="fetchAssignments()">Find My Teams</button>
+        <p onclick="closeModals()" style="color:red; cursor:pointer; margin-top:15px; font-size:14px;">Cancel</p>
+    </div>
+</div>
+
+<div id="teamModal" class="modal-overlay">
+    <div class="modal-content">
+        <img src="https://github.com/surajgajbhiye15/index/blob/main/Aakruti%20Logo.png?raw=true" height="50">
+        <h2>Select Assigned Team</h2>
+        <div id="teamList" class="team-list-container"></div>
+        <button class="modal-btn" style="background:#666" onclick="backToLogin()">Back</button>
+    </div>
+</div>
+
+<script>
+    const ASSIGNMENT_URL = "https://opensheet.elk.sh/1zMjGu1IaCV8ngdmeZwWEGTqNkEqMxmJA9dlfOhVJv3I/Sheet1";
+    const DASHBOARD_URL = "https://opensheet.elk.sh/1hbsjsYNuA9FulSPBrh4wkBoHpE-ExbMG5mb0FPPUZes/Sheet1";
+    
+    let themeChart, progressChart;
+
+    async function loadDashboard() {
+        try {
+            const [assignRes, dashRes] = await Promise.all([
+                fetch(ASSIGNMENT_URL),
+                fetch(DASHBOARD_URL)
+            ]);
+            const assignments = await assignRes.json();
+            const evaluatedData = await dashRes.json();
+
+            let countryCounts = {}, themeCounts = {};
+            evaluatedData.forEach(row => {
+                const c = row["Country"]?.trim(); 
+                const t = row["Theme"]?.trim();
+                if (c) countryCounts[c] = (countryCounts[c] || 0) + 1;
+                if (t) themeCounts[t] = (themeCounts[t] || 0) + 1;
+            });
+
+            // Update Table
+            const tbody = document.querySelector("#countryTable tbody");
+            tbody.innerHTML = Object.entries(countryCounts).sort((a,b)=>b[1]-a[1])
+                .map(([n, v]) => `<tr><td>${n}</td><td>${v}</td></tr>`).join('');
+            
+            // Update Theme Chart
+            updateThemeChart(themeCounts);
+
+            // Update Progress Chart (Evaluated vs Pending)
+            const totalAssigned = assignments.length;
+            const totalEvaluated = evaluatedData.length;
+            const pending = Math.max(0, totalAssigned - totalEvaluated);
+            updateProgressChart(totalEvaluated, pending);
+
+        } catch (e) { console.error("Update Error:", e); }
+    }
+
+    function updateThemeChart(counts) {
+        const ctx = document.getElementById("themeChart").getContext("2d");
+        if (themeChart) themeChart.destroy();
+        themeChart = new Chart(ctx, { 
+            type: 'pie', 
+            data: { 
+                labels: Object.keys(counts), 
+                datasets: [{ 
+                    data: Object.values(counts), 
+                    backgroundColor: ["#007bff","#28a745","#ffc107","#dc3545","#6f42c1","#20c997"] 
+                }] 
+            }, 
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } } } 
+        });
+    }
+
+    function updateProgressChart(evaluated, pending) {
+        const ctx = document.getElementById("progressChart").getContext("2d");
+        if (progressChart) progressChart.destroy();
+        progressChart = new Chart(ctx, { 
+            type: 'pie', 
+            data: { 
+                labels: ['Evaluated', 'Pending'], 
+                datasets: [{ 
+                    data: [evaluated, pending], 
+                    backgroundColor: ["#28a745", "#e9ecef"] 
+                }] 
+            }, 
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { 
+                    legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } }
+                } 
+            } 
+        });
+    }
+
+    function openLoginModal() { document.getElementById('loginModal').style.display = 'flex'; }
+    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display='none'); }
+    function backToLogin() { document.getElementById('teamModal').style.display = 'none'; openLoginModal(); }
+
+    async function fetchAssignments() {
+        const name = document.getElementById('evalFullName').value.trim();
+        const tri = document.getElementById('evalTrigram').value.trim().toLowerCase();
+        if (!name || !tri) return alert("Please enter both Name and Trigram.");
+
+        const btn = document.getElementById('fetchBtn');
+        btn.innerText = "Scanning Sheets..."; btn.disabled = true;
+
+        try {
+            const [assignRes, dashRes] = await Promise.all([ fetch(ASSIGNMENT_URL), fetch(DASHBOARD_URL) ]);
+            const assignments = await assignRes.json();
+            const evaluatedData = await dashRes.json();
+            const evaluatedIDs = evaluatedData.map(r => (r["Team ID"] || "").toString().trim());
+
+            // Filter for this Trigram and ensure Team ID hasn't been submitted yet
+            const pendingTeams = assignments.filter(row => 
+                (row["Trigram"] || "").toString().toLowerCase().trim() === tri && 
+                !evaluatedIDs.includes((row["Team ID"] || "").toString().trim())
+            );
+
+            const list = document.getElementById('teamList'); list.innerHTML = "";
+            if (pendingTeams.length === 0) {
+                alert("No pending teams found for your Trigram!");
+            } else {
+                document.getElementById('loginModal').style.display = 'none'; 
+                document.getElementById('teamModal').style.display = 'flex';
+                pendingTeams.forEach(t => {
+                    const div = document.createElement('div'); div.className = 'team-item';
+                    div.innerHTML = `<strong>ID: ${t["Team ID"]}</strong><br>${t["Team Name"] || 'Aakruti Project'}`;
+                    div.onclick = () => window.location.href = `prefilled_evaluation.html?teamID=${encodeURIComponent(t["Team ID"])}&evaluator=${encodeURIComponent(tri)}&fullName=${encodeURIComponent(name)}`;
+                    list.appendChild(div);
+                });
+            }
+        } catch (e) { alert("Connectivity Error."); } finally { btn.innerText = "Find My Teams"; btn.disabled = false; }
+    }
+
+    window.onload = function() {
+        loadDashboard();
+        setInterval(loadDashboard, 1500); // Live dashboard refresh
+        
+        // Handle Auto-Return after evaluation
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('relog') === 'true') {
+            document.getElementById('evalFullName').value = params.get('name');
+            document.getElementById('evalTrigram').value = params.get('tri');
+            fetchAssignments();
+        }
+    };
+</script>
+</body>
+</html>

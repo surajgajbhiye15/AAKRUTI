@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AAKRUTI Evaluation Form</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f4f6f9; color: #333; }
+        .main-header { position: sticky; top: 0; z-index: 1000; display: flex; align-items: center; justify-content: space-between; background: #f4f7fb; padding: 12px 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+        .header-title { position: absolute; left: 50%; transform: translateX(-50%); font-size: 24px; font-weight: bold; color: #FF0000; white-space: nowrap; }
+        .home-btn { background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: 0.2s; display: flex; align-items: center; gap: 5px; }
+        .aic-logo { height: 50px; object-fit: contain; }
+        .container { display: flex; gap: 20px; padding: 20px; max-width: 1400px; margin: 0 auto; }
+        .section { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .left { width: 30%; } .right { width: 70%; }
+        h3 { margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; color: #005685; }
+        label { font-size: 13px; font-weight: bold; display: block; margin-top: 12px; }
+        input, select, textarea { width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; font-size: 14px; margin-top: 4px; }
+        input[readonly] { background-color: #f0f0f0; cursor: not-allowed; }
+        
+        /* SCORE COLOR CLASSES */
+        .score-input { width: 55px; text-align: center; font-weight: bold; transition: 0.3s; }
+        .score-low { background-color: #f8d7da !important; border-color: #dc3545 !important; color: #721c24; }
+        .score-mid { background-color: #fff3cd !important; border-color: #ffc107 !important; color: #856404; }
+        .score-high { background-color: #d4edda !important; border-color: #28a745 !important; color: #155724; }
+
+        .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .score-box { background: #fafafa; padding: 12px; border-radius: 8px; border: 1px solid #e0e0e0; }
+        .score-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-bottom: 8px; }
+        .results-bar { background: #eef2f7; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px solid #d1d9e6; display: flex; justify-content: space-around; align-items: center; }
+        #gradeDisplay { font-size: 20px; padding: 2px 10px; border-radius: 4px; font-weight: bold; }
+        .grade-A { color: #155724; background: #d4edda; } 
+        .grade-B { color: #004085; background: #cce5ff; } 
+        .grade-C { color: #856404; background: #fff3cd; } 
+        .grade-D { color: #721c24; background: #f8d7da; }
+        .submit-btn { background: #28a745; color: white; border: none; padding: 16px; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px; }
+        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
+        .modal-content { background: #fff; padding: 30px; text-align: center; border-radius: 15px; width: 400px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .modal-logo { height: 50px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="main-header">
+    <button onclick="window.location.href='index.html'" class="home-btn">🏠 Home</button>
+    <div class="header-title">AAKRUTI – Evaluation Form</div>
+    <img src="https://github.com/surajgajbhiye15/index/blob/main/Aakruti%20Logo.png?raw=true" class="aic-logo">
+</div>
+
+<form id="evaluationForm">
+    <div class="container">
+        <div class="section left">
+            <h3>Team Details</h3>
+            <label>Team Country</label><select id="teamCountry"><option value="">Select Country</option><option value="India">India</option></select>
+            <label>Team ID</label><input type="text" id="teamId" readonly>
+            <label>Team Name</label><input type="text" id="teamName" required>
+            <label>Team Leader's Mail ID</label><input type="email" id="email" required>
+            <label>Theme</label>
+            <select id="theme" required>
+                <option value="">Select Theme</option>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Environment">Environment</option>
+                <option value="Smart Cities">Smart Cities</option>
+                <option value="Education">Education</option>
+                <option value="Manufacturing">Manufacturing</option>
+            </select>
+            <div style="margin-top:25px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px dashed #007bff;">
+                <label style="margin-top:0">Project Submission</label>
+                <button type="button" id="openProjectBtn" class="home-btn" style="width:100%; background:#28a745; display:none; justify-content:center;">📂 Open Project Link</button>
+                <p id="noUrlMsg" style="color:#d9534f; display:none; font-size:12px; margin-top:8px; text-align:center;">⚠️ No Project URL assigned.</p>
+            </div>
+        </div>
+
+        <div class="section right">
+            <h3>Evaluation Scores (0–5)</h3>
+            <div class="score-grid">
+                <div class="score-box">
+                    <h4>A. Overall Project</h4>
+                    <div class="score-item">Theme Adherence <input type="number" class="score-input" min="0" max="5" step="1" required oninput="updateScoreUI(this)"></div>
+                    <div class="score-item">Creativity <input type="number" class="score-input" min="0" max="5" step="1" required oninput="updateScoreUI(this)"></div>
+                    <div class="score-item">Originality <input type="number" class="score-input" min="0" max="5" step="1" required oninput="updateScoreUI(this)"></div>
+                    <div class="score-item">Feasibility <input type="number" class="score-input" min="0" max="5" step="1" required oninput="updateScoreUI(this)"></div>
+                </div>
+                <div class="score-box">
+                    <h4>B. CAD</h4>
+                    <div class="score-item">Part/Assembly <input type="number" class="score-input" min="0" max="5" step="1" required oninput="updateScoreUI(this)"></div>
+                    <div class="score-item">Design Appeal <input type="number" class="score-input" min="0" max="5" step="1" required oninput="updateScoreUI(this)"></div>
+                    <div class="score-item">Add Ins <input type="number" class="score-input" min="0" max="5" step="1" required oninput="updateScoreUI(this)"></div>
+                    <div class="score-item">Rendering <input type="number" class="score-input" min="0" max="5" step="1" required oninput="updateScoreUI(this)"></div>
+                </div>
+                <div class="score-box">
+                    <h4>C. Presentation</h4>
+                    <div class="score-item">Problem <input type="number" class="score-input" min="0" max="5" step="1" required oninput="updateScoreUI(this)"></div>
+                    <div class="score-item">Concept <input type="number" class="score-input" min="0" max="5" step="1" required oninput="updateScoreUI(this)"></div>
+                    <div class="score-item">Working <input type="number" class="score-input" min="0" max="5" step="1" required oninput="updateScoreUI(this)"></div>
+                    <div class="score-item">Calculations <input type="number" class="score-input" min="0" max="5" step="1" required oninput="updateScoreUI(this)"></div>
+                    <div class="score-item">Market Survey <input type="number" class="score-input" min="0" max="5" step="1" required oninput="updateScoreUI(this)"></div>
+                </div>
+                <div class="score-box">
+                    <h4>D. Videos</h4>
+                    <div class="score-item">Journey <input type="number" class="score-input" min="0" max="5" step="1" required oninput="updateScoreUI(this)"></div>
+                    <div class="score-item">Pitch <input type="number" class="score-input" min="0" max="5" step="1" required oninput="updateScoreUI(this)"></div>
+                </div>
+            </div>
+
+            <div class="results-bar">
+                <div>Total: <span id="totalScore">0</span></div>
+                <div>Avg: <span id="avgScore">0.00</span></div>
+                <div>Grade: <span id="gradeDisplay">N/A</span></div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div><label>Eligible for TOP-30</label><select id="top30" required><option value="">Select</option><option>Yes</option><option>No</option></select></div>
+                <div><label>Simulations Done</label><select id="simulation" required><option value="">Select</option><option>Yes</option><option>No</option></select></div>
+            </div>
+
+            <label>Evaluator Name</label><input type="text" id="evaluatorName" readonly>
+            <label>Trigram</label><input type="text" id="trigram" readonly>
+            <label>Comments</label><textarea id="comments" rows="3" required></textarea>
+            <button type="submit" class="submit-btn">✅ Submit Final Evaluation</button>
+        </div>
+    </div>
+</form>
+
+<div id="confirmModal" class="modal">
+    <div class="modal-content">
+        <img src="https://github.com/surajgajbhiye15/index/blob/main/Aakruti%20Logo.png?raw=true" class="modal-logo">
+        <h3 style="color: #005685;">Confirm Submission?</h3>
+        <p>Do you want to submit the evaluation for this team?</p>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button onclick="processSubmit()" style="background: #28a745; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; flex: 1; font-weight: bold;">Yes, Submit</button>
+            <button onclick="closeConfirm()" style="background: #6c757d; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; flex: 1; font-weight: bold;">No, Edit</button>
+        </div>
+    </div>
+</div>
+
+<div id="successModal" class="modal">
+    <div class="modal-content">
+        <img src="https://github.com/surajgajbhiye15/index/blob/main/Aakruti%20Logo.png?raw=true" class="modal-logo">
+        <h2 style="color: #28a745;">Thank you for evaluation!</h2>
+        <p>Your response has been recorded. Redirecting...</p>
+    </div>
+</div>
+
+<script>
+    let countryChoices;
+    let currentProjectURL = ""; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_dbR0ym16e44bbPSkYFpMef35fBbDDshYmgpLZeBtqwlrcBvRDIegMK53Em8Moyol/exec"; 
+    const ASSIGNMENT_URL = "https://opensheet.elk.sh/1zMjGu1IaCV8ngdmeZwWEGTqNkEqMxmJA9dlfOhVJv3I/Sheet1";
+
+    document.addEventListener("DOMContentLoaded", () => {
+        countryChoices = new Choices('#teamCountry', { searchEnabled: true, itemSelectText: '', shouldSort: false });
+        const params = new URLSearchParams(window.location.search);
+        const tid = params.get('teamID');
+        if (tid) {
+            document.getElementById('teamId').value = tid;
+            document.getElementById('trigram').value = params.get('evaluator')?.toUpperCase() || "";
+            document.getElementById('evaluatorName').value = params.get('fullName') || "";
+            fetchDetails(tid);
+        }
+    });
+
+    async function fetchDetails(tid) {
+        try {
+            const res = await fetch(ASSIGNMENT_URL);
+            const data = await res.json();
+            const team = data.find(row => (row["Team ID"] || "").toString().trim() === tid);
+            if (team) {
+                document.getElementById('teamName').value = team["Team Name"] || "";
+                const themeVal = team["Theme"] || "";
+                const themeSelect = document.getElementById('theme');
+                if (themeVal) {
+                    if (!Array.from(themeSelect.options).some(o => o.value === themeVal)) {
+                        themeSelect.add(new Option(themeVal, themeVal));
+                    }
+                    themeSelect.value = themeVal;
+                }
+                document.getElementById('email').value = team["Team Leader's Mail ID"] || team["Team Leader's mail ID"] || ""; 
+                const countryVal = team["Country"] || "";
+                if (countryVal) {
+                    const exists = Array.from(document.getElementById('teamCountry').options).some(opt => opt.value === countryVal);
+                    if (!exists) {
+                        countryChoices.setChoices([{ value: countryVal, label: countryVal, selected: true }], 'value', 'label', false);
+                    } else {
+                        countryChoices.setChoiceByValue(countryVal);
+                    }
+                }
+                currentProjectURL = team["Project URL"] || "";
+                if (currentProjectURL && currentProjectURL.startsWith('http')) {
+                    document.getElementById('openProjectBtn').style.display = "flex";
+                    document.getElementById('openProjectBtn').onclick = () => window.open(currentProjectURL, '_blank');
+                } else { document.getElementById('noUrlMsg').style.display = "block"; }
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    // MAIN UI UPDATE FUNCTION
+    function updateScoreUI(input) {
+        const val = parseFloat(input.value);
+        input.classList.remove("score-low", "score-mid", "score-high");
+        if (!isNaN(val)) {
+            if (val <= 2) input.classList.add("score-low");
+            else if (val <= 3) input.classList.add("score-mid"); // Adjusted for step 1
+            else if (val >= 4) input.classList.add("score-high");
+        }
+        calcScores();
+    }
+
+    function calcScores() {
+        let total = 0, count = 0;
+        document.querySelectorAll(".score-input").forEach(i => {
+            let v = parseFloat(i.value);
+            if (!isNaN(v)) { total += v; count++; }
+        });
+        const avg = count ? (total / count) : 0;
+        document.getElementById("totalScore").innerText = total;
+        document.getElementById("avgScore").innerText = avg.toFixed(2);
+        const gb = document.getElementById("gradeDisplay");
+        gb.classList.remove("grade-A", "grade-B", "grade-C", "grade-D");
+        let g = "D", gc = "grade-D";
+        if (avg >= 4) { g = "A"; gc = "grade-A"; }
+        else if (avg >= 3) { g = "B"; gc = "grade-B"; }
+        else if (avg >= 2) { g = "C"; gc = "grade-C"; }
+        if (count > 0) { gb.innerText = g; gb.classList.add(gc); } else { gb.innerText = "N/A"; }
+    }
+
+    document.getElementById("evaluationForm").onsubmit = (e) => {
+        e.preventDefault();
+        document.getElementById("confirmModal").style.display = "flex";
+    };
+
+    function closeConfirm() { document.getElementById("confirmModal").style.display = "none"; }
+
+    async function processSubmit() {
+        closeConfirm();
+        const scores = Array.from(document.querySelectorAll(".score-input")).map(i => parseFloat(i.value) || 0);
+        const formData = {
+            country: document.getElementById("teamCountry").value,
+            teamId: document.getElementById("teamId").value,
+            teamName: document.getElementById("teamName").value,
+            email: document.getElementById("email").value,
+            projectUrl: currentProjectURL,
+            theme: document.getElementById("theme").value,
+            A1: scores[0], A2: scores[1], A3: scores[2], A4: scores[3],
+            B1: scores[4], B2: scores[5], B3: scores[6], B4: scores[7],
+            C1: scores[8], C2: scores[9], C3: scores[10], C4: scores[11], C5: scores[12],
+            D1: scores[13], D2: scores[14],
+            grandTotal: document.getElementById("totalScore").innerText,
+            average: document.getElementById("avgScore").innerText,
+            grade: document.getElementById("gradeDisplay").innerText,
+            top30: document.getElementById("top30").value,
+            simulation: document.getElementById("simulation").value,
+            comments: document.getElementById("comments").value,
+            trigram: document.getElementById("trigram").value,
+            evaluatorName: document.getElementById("evaluatorName").value
+        };
+
+        const form = document.createElement("form");
+        form.method = "POST"; form.action = SCRIPT_URL; form.target = "hidden_iframe";
+        for (let key in formData) {
+            const input = document.createElement("input");
+            input.type = "hidden"; input.name = key; input.value = formData[key];
+            form.appendChild(input);
+        }
+        document.body.appendChild(form); form.submit(); document.body.removeChild(form);
+        
+        document.getElementById("successModal").style.display = "flex";
+        setTimeout(() => {
+            window.location.href = `index.html?relog=true&tri=${encodeURIComponent(formData.trigram)}&name=${encodeURIComponent(formData.evaluatorName)}`;
+        }, 2000);
+    }
+</script>
+<iframe name="hidden_iframe" style="display:none;"></iframe>
+</body>
+</html>
