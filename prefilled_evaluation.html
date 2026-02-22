@@ -40,13 +40,82 @@
         .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
         .modal-content { background: #fff; padding: 30px; text-align: center; border-radius: 15px; width: 400px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .modal-logo { height: 50px; margin-bottom: 15px; }
+		
+		/* Full screen overlay */
+		#loadingOverlay {
+		  display: none;
+		  position: fixed;
+		  top: 0; left: 0;
+		  width: 100%; height: 100%;
+		  background: rgba(255, 255, 255, 0.98); 
+		  z-index: 10000;
+		  flex-direction: column; /* Stacks wrapper and text vertically */
+		  justify-content: center;
+		  align-items: center;
+		}
+
+		/* The Anchor Point - ensures children stay centered */
+		.loader-wrapper {
+		  position: relative;
+		  width: 300px;  /* Defined space for the ring */
+		  height: 300px; /* Defined space for the ring */
+		  display: flex;
+		  justify-content: center;
+		  align-items: center;
+		}
+
+		/* The Rotating Ring - Perfectly Centered */
+		.spinner-ring {
+		  position: absolute;
+		  width: 280px; /* Slightly larger than logo */
+		  height: 280px;
+		  border: 6px solid transparent;
+		  border-top: 6px solid #FF0000;   
+		  border-right: 6px solid #FF0000; 
+		  border-radius: 50%;
+		  box-sizing: border-box; /* Prevents border from adding to width */
+		  animation: spin 1s linear infinite;
+		  top: 10px; /* Centers it within the 300px wrapper */
+		  left: 10px;
+		}
+
+		/* The Pulsing Logo - Perfectly Centered */
+		.loading-logo {
+		  width: 200px;
+		  height: 200px;
+		  object-fit: contain;
+		  animation: pulseLogo 2s ease-in-out infinite;
+		  z-index: 10001;
+		  /* No position absolute needed here because of wrapper's Flexbox */
+		}
+
+		@keyframes spin {
+		  from { transform: rotate(0deg); }
+		  to { transform: rotate(360deg); }
+		}
+
+		@keyframes pulseLogo {
+		  0% { opacity: 0.1; transform: scale(0.9); }
+		  50% { opacity: 1; transform: scale(1); }
+		  100% { opacity: 0.1; transform: scale(0.9); }
+		}
+
+		/* Pushes the text away from the 300px wrapper */
+		.loading-text {
+		  margin-top: 20px; 
+		  font-size: 20px;
+		  font-weight: bold;
+		  color: #005685;
+		  letter-spacing: 2px;
+		  text-align: center;
+		}
     </style>
 </head>
 <body>
 
 <div class="main-header">
     <button onclick="window.location.href='index.html'" class="home-btn">🏠 Home</button>
-    <div class="header-title">AAKRUTI – Evaluation Form</div>
+    <div class="header-title">AAKRUTI Evaluation Dashboard</div>
     <img src="https://github.com/surajgajbhiye15/index/blob/main/Aakruti%20Logo.png?raw=true" class="aic-logo">
 </div>
 
@@ -69,7 +138,7 @@
             </select>
             <div style="margin-top:25px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px dashed #007bff;">
                 <label style="margin-top:0">Project Submission</label>
-                <button type="button" id="openProjectBtn" class="home-btn" style="width:100%; background:#28a745; display:none; justify-content:center;">📂 Open Project Link</button>
+                <button type="button" id="openProjectBtn" class="home-btn" style="width:100%; background:#28a745; display:none; justify-content:center;">📂 Open Project </button>
                 <p id="noUrlMsg" style="color:#d9534f; display:none; font-size:12px; margin-top:8px; text-align:center;">⚠️ No Project URL assigned.</p>
             </div>
         </div>
@@ -141,8 +210,16 @@
     <div class="modal-content">
         <img src="https://github.com/surajgajbhiye15/index/blob/main/Aakruti%20Logo.png?raw=true" class="modal-logo">
         <h2 style="color: #28a745;">Thank you for evaluation!</h2>
-        <p>Your response has been recorded. Redirecting...</p>
+        <p>Your evaluation has been recorded. Redirecting...</p>
     </div>
+</div>
+
+<div id="loadingOverlay">
+  <div class="loader-wrapper">
+    <div class="spinner-ring"></div>
+    <img src="https://github.com/surajgajbhiye15/index/blob/main/Aakruti%20Logo.png?raw=true" class="loading-logo">
+  </div>
+  <div class="loading-text">SAVING EVALUATION...</div>
 </div>
 
 <script>
@@ -237,9 +314,11 @@
     async function processSubmit() {
     closeConfirm();
     
-    // Select ALL score inputs to ensure we have the full list
-    const scoreInputs = document.querySelectorAll(".score-input");
-    const scores = Array.from(scoreInputs).map(i => parseFloat(i.value) || 0);
+    // 1. Show the Loading Overlay
+    const overlay = document.getElementById("loadingOverlay");
+    overlay.style.display = "flex";
+
+    const scores = Array.from(document.querySelectorAll(".score-input")).map(i => parseFloat(i.value) || 0);
 
     const formData = {
         country: document.getElementById("teamCountry").value,
@@ -248,13 +327,10 @@
         email: document.getElementById("email").value,
         projectUrl: currentProjectURL,
         theme: document.getElementById("theme").value,
-        
-        // Manual mapping to ensure NO skips
-        A1: scores[0],  A2: scores[1],  A3: scores[2],  A4: scores[3],
-        B1: scores[4],  B2: scores[5],  B3: scores[6],  B4: scores[7],
-        C1: scores[8],  C2: scores[9],  C3: scores[10], C4: scores[11], C5: scores[12],
+        A1: scores[0], A2: scores[1], A3: scores[2], A4: scores[3],
+        B1: scores[4], B2: scores[5], B3: scores[6], B4: scores[7],
+        C1: scores[8], C2: scores[9], C3: scores[10], C4: scores[11], C5: scores[12],
         D1: scores[13], D2: scores[14],
-        
         grandTotal: document.getElementById("totalScore").innerText,
         average: document.getElementById("avgScore").innerText,
         grade: document.getElementById("gradeDisplay").innerText,
@@ -265,25 +341,33 @@
         evaluatorName: document.getElementById("evaluatorName").value
     };
 
-    // Use the Fetch API instead of the hidden form for better reliability
     const formBody = new URLSearchParams();
-    for (const key in formData) {
-        formBody.append(key, formData[key]);
-    }
+    for (const key in formData) { formBody.append(key, formData[key]); }
 
     try {
+        // Submit to Google Sheets
         await fetch(SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors', 
             body: formBody
         });
-        
-        document.getElementById("successModal").style.display = "flex";
+
+        // 2. Short delay to ensure Google Sheets finishes its "Write"
+        // This solves the lag issue you mentioned!
         setTimeout(() => {
-            window.location.href = `index.html?relog=true&tri=${encodeURIComponent(formData.trigram)}&name=${encodeURIComponent(formData.evaluatorName)}`;
-        }, 2000);
+            overlay.style.display = "none";
+            document.getElementById("successModal").style.display = "flex";
+            
+            setTimeout(() => {
+                // Add a timestamp to the redirect to force the index page to fetch fresh data
+                window.location.href = `index.html?relog=true&t=${Date.now()}&tri=${encodeURIComponent(formData.trigram)}&name=${encodeURIComponent(formData.evaluatorName)}`;
+            }, 1000);
+        }, 1500); // 2 second "Breathing Room" for the Sheet
+        
     } catch (err) {
-        console.error("Submission error:", err);
+        overlay.style.display = "none";
+        alert("Submission Error. Please check your connection.");
+        console.error(err);
     }
 }
 </script>
