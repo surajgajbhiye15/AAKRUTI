@@ -148,7 +148,7 @@
 <script>
     let countryChoices;
     let currentProjectURL = ""; 
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwjCtgAIVKhZneTK8g1H9TateOgNJgMxyVCLUNCAtwDKuWZsWSE5wea3d5EfPmKu-eN/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyfWke8h3V2WRDkF5HaiEPBROet9bu4s9g5eIvCgs3auSWb36-IIQAQwEjU1hV0z6ky/exec"; 
     const ASSIGNMENT_URL = "https://opensheet.elk.sh/1zMjGu1IaCV8ngdmeZwWEGTqNkEqMxmJA9dlfOhVJv3I/Sheet1";
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -235,45 +235,58 @@
     function closeConfirm() { document.getElementById("confirmModal").style.display = "none"; }
 
     async function processSubmit() {
-        closeConfirm();
-        const scores = Array.from(document.querySelectorAll(".score-input")).map(i => parseFloat(i.value) || 0);
-        const formData = {
-            country: document.getElementById("teamCountry").value,
-            teamId: document.getElementById("teamId").value,
-            teamName: document.getElementById("teamName").value,
-            email: document.getElementById("email").value,
-            projectUrl: currentProjectURL,
-            theme: document.getElementById("theme").value,
-            A1: scores[0], A2: scores[1], A3: scores[2], A4: scores[3],
-            B1: scores[4], B2: scores[5], B3: scores[6], B4: scores[7],
-            C1: scores[8], C2: scores[9], C3: scores[10], C4: scores[11], C5: scores[12],
-            D1: scores[13], D2: scores[14],
-            grandTotal: document.getElementById("totalScore").innerText,
-            average: document.getElementById("avgScore").innerText,
-            grade: document.getElementById("gradeDisplay").innerText,
-            top30: document.getElementById("top30").value,
-            simulation: document.getElementById("simulation").value,
-            comments: document.getElementById("comments").value,
-            trigram: document.getElementById("trigram").value,
-            evaluatorName: document.getElementById("evaluatorName").value
-        };
+    closeConfirm();
+    
+    // Select ALL score inputs to ensure we have the full list
+    const scoreInputs = document.querySelectorAll(".score-input");
+    const scores = Array.from(scoreInputs).map(i => parseFloat(i.value) || 0);
 
-        const form = document.createElement("form");
-        form.method = "POST"; form.action = SCRIPT_URL; form.target = "hidden_iframe";
-        for (let key in formData) {
-            const input = document.createElement("input");
-            input.type = "hidden"; input.name = key; input.value = formData[key];
-            form.appendChild(input);
-        }
-        document.body.appendChild(form); form.submit(); document.body.removeChild(form);
+    const formData = {
+        country: document.getElementById("teamCountry").value,
+        teamId: document.getElementById("teamId").value,
+        teamName: document.getElementById("teamName").value,
+        email: document.getElementById("email").value,
+        projectUrl: currentProjectURL,
+        theme: document.getElementById("theme").value,
+        
+        // Manual mapping to ensure NO skips
+        A1: scores[0],  A2: scores[1],  A3: scores[2],  A4: scores[3],
+        B1: scores[4],  B2: scores[5],  B3: scores[6],  B4: scores[7],
+        C1: scores[8],  C2: scores[9],  C3: scores[10], C4: scores[11], C5: scores[12],
+        D1: scores[13], D2: scores[14],
+        
+        grandTotal: document.getElementById("totalScore").innerText,
+        average: document.getElementById("avgScore").innerText,
+        grade: document.getElementById("gradeDisplay").innerText,
+        top30: document.getElementById("top30").value,
+        simulation: document.getElementById("simulation").value,
+        comments: document.getElementById("comments").value,
+        trigram: document.getElementById("trigram").value,
+        evaluatorName: document.getElementById("evaluatorName").value
+    };
+
+    // Use the Fetch API instead of the hidden form for better reliability
+    const formBody = new URLSearchParams();
+    for (const key in formData) {
+        formBody.append(key, formData[key]);
+    }
+
+    try {
+        await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors', 
+            body: formBody
+        });
         
         document.getElementById("successModal").style.display = "flex";
         setTimeout(() => {
             window.location.href = `index.html?relog=true&tri=${encodeURIComponent(formData.trigram)}&name=${encodeURIComponent(formData.evaluatorName)}`;
         }, 2000);
+    } catch (err) {
+        console.error("Submission error:", err);
     }
+}
 </script>
 <iframe name="hidden_iframe" style="display:none;"></iframe>
 </body>
-
 </html>
