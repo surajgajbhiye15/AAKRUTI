@@ -4,6 +4,8 @@
     <title>AAKRUTI Innovation Competition - Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <style>
         html, body { margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; height: 100vh; width: 100vw; overflow: hidden; background: url('https://www.solidworks.com/sites/default/filesd10/styles/bg_large/public/2025-04/AAKRUTI-2025-Student-Journey-SOLIDWORKS.png.webp?itok=XxEt4r_s') no-repeat center center; background-size: cover; }
         .fade-overlay { width: 100%; height: 100%; background: rgba(255,255,255,0.85); backdrop-filter: blur(3px); display: flex; flex-direction: column; }
@@ -29,15 +31,22 @@
         .chart-card { flex: 1; background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .chart-container { width: 100%; height: 160px; }
 
-        /* RIGHT PANEL: Start Action */
-        .right-panel { flex: 0.8; display: flex; align-items: center; justify-content: center; }
-        .start-btn { padding: 20px 40px; font-size: 22px; font-weight: bold; background-color: #005685; color: white; border: none; border-radius: 12px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .start-btn:hover { background-color: #003f63; transform: scale(1.05); }
+        /* RIGHT PANEL */
+        .right-panel { flex: 0.8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+        .start-btn { padding: 20px 40px; width: 100%; font-size: 20px; font-weight: bold; background-color: #005685; color: white; border: none; border-radius: 12px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.2); text-align: center; }
+        .start-btn:hover { background-color: #003f63; transform: scale(1.02); }
+
+        .download-box { width: 100%; box-sizing: border-box; }
+        #exportFilters { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #ddd; }
+        .filter-group { margin-bottom: 12px; text-align: left; }
+        .filter-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #555; }
+        .filter-group input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .date-row { display: flex; gap: 5px; }
 
         .footer-banner { flex: 0 0 70px; width: 100%; background: white; border-top: 1px solid #ccc; display: flex; align-items: center; }
         .footer-banner img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* MODALS */
+        /* MODALS & LOADER */
         .modal-overlay { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .modal-content { background: white; padding: 30px; border-radius: 15px; width: 420px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .modal-content input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; text-align: center; }
@@ -45,9 +54,26 @@
         .team-item { padding: 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: 0.2s; }
         .team-item:hover { background-color: #f0f8ff; color: #005685; font-weight: bold; }
         .modal-btn { background-color: #005685; color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 15px; width: 100%; font-weight: bold; }
+
+        /* PULSING LOADER OVERLAY */
+        #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.98); z-index: 10000; flex-direction: column; justify-content: center; align-items: center; }
+        .loader-wrapper { position: relative; width: 300px; height: 300px; display: flex; justify-content: center; align-items: center; }
+        .spinner-ring { position: absolute; width: 280px; height: 280px; border: 6px solid transparent; border-top: 6px solid #FF0000; border-right: 6px solid #FF0000; border-radius: 50%; animation: spin 1s linear infinite; top: 10px; left: 10px; }
+        .loading-logo { width: 200px; height: 200px; object-fit: contain; animation: pulseLogo 2s ease-in-out infinite; z-index: 10001; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes pulseLogo { 0% { opacity: 0.1; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1); } 100% { opacity: 0.1; transform: scale(0.9); } }
     </style>
 </head>
 <body>
+
+<div id="loadingOverlay">
+  <div class="loader-wrapper">
+    <div class="spinner-ring"></div>
+    <img src="https://github.com/surajgajbhiye15/index/blob/main/Aakruti%20Logo.png?raw=true" class="loading-logo">
+  </div>
+  <div style="margin-top: 20px; font-size: 18px; font-weight: bold; color: #005685;">GENERATING REPORT...</div>
+</div>
+
 <div class="fade-overlay">
     <header>
         <h1>AAKRUTI Innovation Competition</h1>
@@ -82,6 +108,31 @@
 
         <div class="right-panel">
             <button class="start-btn" onclick="openLoginModal()">Start Evaluation</button>
+            
+            <div class="download-box">
+                <button id="mainExportBtn" class="start-btn" style="background-color: #28a745; margin-top: 0;" onclick="toggleExportFilters()">
+                    Export My Evaluated Data
+                </button>
+
+                <div id="exportFilters" style="display: none;">
+                    <h3 style="margin:0 0 15px 0; font-size: 16px; color: #005685; text-align: center;">Export Filter</h3>
+                    <div class="filter-group">
+                        <label>Evaluator Trigram</label>
+                        <input type="text" id="filterTrigram" placeholder="e.g. ABC" style="text-transform: uppercase;">
+                    </div>
+                    <div class="filter-group">
+                        <label>Date Range (DD-MM-YYYY)</label>
+                        <div class="date-row">
+                            <input type="date" id="filterStartDate">
+                            <input type="date" id="filterEndDate">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="modal-btn" style="background:#28a745; margin-top: 5px; flex: 2;" onclick="downloadFilteredData()">Download Excel</button>
+                        <button class="modal-btn" style="background:#666; margin-top: 5px; flex: 1;" onclick="toggleExportFilters()">Cancel</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -111,11 +162,155 @@
 </div>
 
 <script>
+    // Configuration
     const ASSIGNMENT_URL = "https://opensheet.elk.sh/1zMjGu1IaCV8ngdmeZwWEGTqNkEqMxmJA9dlfOhVJv3I/Sheet1";
     const DASHBOARD_URL = "https://opensheet.elk.sh/1hbsjsYNuA9FulSPBrh4wkBoHpE-ExbMG5mb0FPPUZes/Sheet1";
-    
-    let themeChart, progressChart;
+    let themeChart = null;
+    let progressChart = null;
 
+    /* --- 1. CORE UI FUNCTIONS --- */
+    function openLoginModal() {
+        const modal = document.getElementById('loginModal');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    function closeModals() {
+        document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+    }
+
+    function backToLogin() {
+        const teamModal = document.getElementById('teamModal');
+        if (teamModal) teamModal.style.display = 'none';
+        openLoginModal();
+    }
+
+    function toggleExportFilters() {
+        const filters = document.getElementById('exportFilters');
+        const mainBtn = document.getElementById('mainExportBtn');
+        if (filters.style.display === 'none' || filters.style.display === '') {
+            filters.style.display = 'block';
+            mainBtn.style.display = 'none';
+        } else {
+            filters.style.display = 'none';
+            mainBtn.style.display = 'block';
+        }
+    }
+
+    /* --- 2. DATA PROCESSING --- */
+    async function fetchAssignments() {
+        const nameInput = document.getElementById('evalFullName');
+        const triInput = document.getElementById('evalTrigram');
+        const name = nameInput.value.trim();
+        const tri = triInput.value.trim().toLowerCase();
+
+        if (!name || !tri) return alert("Please enter both Name and Trigram.");
+        
+        const btn = document.getElementById('fetchBtn');
+        btn.innerText = "Connecting..."; 
+        btn.disabled = true;
+
+        try {
+            const [assignRes, dashRes] = await Promise.all([
+                fetch(ASSIGNMENT_URL),
+                fetch(DASHBOARD_URL)
+            ]);
+            const assignments = await assignRes.json();
+            const evaluatedData = await dashRes.json();
+            const evaluatedIDs = evaluatedData.map(r => (r["Team ID"] || "").toString().trim());
+
+            const pendingTeams = assignments.filter(row => 
+                (row["Trigram"] || "").toString().toLowerCase().trim() === tri && 
+                !evaluatedIDs.includes((row["Team ID"] || "").toString().trim())
+            );
+
+            const list = document.getElementById('teamList');
+            list.innerHTML = "";
+
+            if (pendingTeams.length === 0) {
+                alert("No pending teams found!");
+            } else {
+                document.getElementById('loginModal').style.display = 'none';
+                document.getElementById('teamModal').style.display = 'flex';
+                pendingTeams.forEach(t => {
+                    const div = document.createElement('div');
+                    div.className = 'team-item';
+                    div.innerHTML = `<strong>ID: ${t["Team ID"]}</strong><br>${t["Team Name"] || 'Aakruti Project'}`;
+                    div.onclick = () => {
+                        window.location.href = `prefilled_evaluation.html?teamID=${encodeURIComponent(t["Team ID"])}&evaluator=${encodeURIComponent(tri)}&fullName=${encodeURIComponent(name)}`;
+                    };
+                    list.appendChild(div);
+                });
+            }
+        } catch (e) {
+            alert("Connection Error. Please check your network.");
+        } finally {
+            btn.innerText = "Find My Teams";
+            btn.disabled = false;
+        }
+    }
+
+    async function downloadFilteredData() {
+    const trigram = document.getElementById("filterTrigram").value.trim().toUpperCase();
+    const startStr = document.getElementById("filterStartDate").value; // YYYY-MM-DD
+    const endStr = document.getElementById("filterEndDate").value;     // YYYY-MM-DD
+    const overlay = document.getElementById("loadingOverlay");
+    
+    if (overlay) overlay.style.display = "flex";
+    
+    try {
+        const response = await fetch(DASHBOARD_URL);
+        const data = await response.json();
+        
+        const filteredData = data.filter(row => {
+            // Force parse the sheet timestamp
+            const rawTimestamp = row["Timestamp"];
+            if (!rawTimestamp) return false;
+
+            // Convert "MM/DD/YYYY" or "DD/MM/YYYY" strings safely
+            const rowDate = new Date(rawTimestamp);
+            
+            // If the sheet date is invalid, we skip this row
+            if (isNaN(rowDate.getTime())) return false;
+
+            // Start of Start Day (00:00:00)
+            const startLimit = startStr ? new Date(startStr + "T00:00:00") : null;
+            
+            // End of End Day (23:59:59)
+            const endLimit = endStr ? new Date(endStr + "T23:59:59") : null;
+
+            const actualTrigram = (row["Trigram"] || row["trigram"] || "").toUpperCase();
+            
+            const matchTri = !trigram || actualTrigram === trigram;
+            const matchStart = !startLimit || rowDate >= startLimit;
+            const matchEnd = !endLimit || rowDate <= endLimit;
+            
+            return matchTri && matchStart && matchEnd;
+        });
+
+        if (filteredData.length === 0) {
+            alert(`No evaluations found for ${trigram || 'All Evaluators'} between ${startStr} and ${endStr}`);
+        } else {
+            const formatted = filteredData.map(row => {
+                const d = new Date(row["Timestamp"]);
+                return { 
+                    ...row, 
+                    Timestamp: `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}` 
+                };
+            });
+            
+            const ws = XLSX.utils.json_to_sheet(formatted);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Evaluations");
+            XLSX.writeFile(wb, `AAKRUTI_Report_${trigram || 'All'}.xlsx`);
+        }
+    } catch (err) {
+        alert("Download failed: " + err.message);
+    } finally {
+        if (overlay) overlay.style.display = "none";
+    }
+}
+
+    /* --- 3. DASHBOARD REFRESH --- */
     async function loadDashboard() {
         try {
             const [assignRes, dashRes] = await Promise.all([
@@ -127,117 +322,66 @@
 
             let countryCounts = {}, themeCounts = {};
             evaluatedData.forEach(row => {
-                const c = row["Country"]?.trim(); 
+                const c = row["Country"]?.trim();
                 const t = row["Theme"]?.trim();
                 if (c) countryCounts[c] = (countryCounts[c] || 0) + 1;
                 if (t) themeCounts[t] = (themeCounts[t] || 0) + 1;
             });
 
-            // Update Table
             const tbody = document.querySelector("#countryTable tbody");
-            tbody.innerHTML = Object.entries(countryCounts).sort((a,b)=>b[1]-a[1])
-                .map(([n, v]) => `<tr><td>${n}</td><td>${v}</td></tr>`).join('');
-            
-            // Update Theme Chart
-            updateThemeChart(themeCounts);
-
-            // Update Progress Chart (Evaluated vs Pending)
-            const totalAssigned = assignments.length;
-            const totalEvaluated = evaluatedData.length;
-            const pending = Math.max(0, totalAssigned - totalEvaluated);
-            updateProgressChart(totalEvaluated, pending);
-
-        } catch (e) { console.error("Update Error:", e); }
-    }
-
-    function updateThemeChart(counts) {
-        const ctx = document.getElementById("themeChart").getContext("2d");
-        if (themeChart) themeChart.destroy();
-        themeChart = new Chart(ctx, { 
-            type: 'pie', 
-            data: { 
-                labels: Object.keys(counts), 
-                datasets: [{ 
-                    data: Object.values(counts), 
-                    backgroundColor: ["#007bff","#28a745","#ffc107","#dc3545","#6f42c1","#20c997"] 
-                }] 
-            }, 
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } } } 
-        });
-    }
-
-    function updateProgressChart(evaluated, pending) {
-        const ctx = document.getElementById("progressChart").getContext("2d");
-        if (progressChart) progressChart.destroy();
-        progressChart = new Chart(ctx, { 
-            type: 'pie', 
-            data: { 
-                labels: ['Evaluated', 'Pending'], 
-                datasets: [{ 
-                    data: [evaluated, pending], 
-                    backgroundColor: ["#28a745", "#e9ecef"] 
-                }] 
-            }, 
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                plugins: { 
-                    legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } }
-                } 
-            } 
-        });
-    }
-
-    function openLoginModal() { document.getElementById('loginModal').style.display = 'flex'; }
-    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display='none'); }
-    function backToLogin() { document.getElementById('teamModal').style.display = 'none'; openLoginModal(); }
-
-    async function fetchAssignments() {
-        const name = document.getElementById('evalFullName').value.trim();
-        const tri = document.getElementById('evalTrigram').value.trim().toLowerCase();
-        if (!name || !tri) return alert("Please enter both Name and Trigram.");
-
-        const btn = document.getElementById('fetchBtn');
-        btn.innerText = "Scanning Sheets..."; btn.disabled = true;
-
-        try {
-            const [assignRes, dashRes] = await Promise.all([ fetch(ASSIGNMENT_URL), fetch(DASHBOARD_URL) ]);
-            const assignments = await assignRes.json();
-            const evaluatedData = await dashRes.json();
-            const evaluatedIDs = evaluatedData.map(r => (r["Team ID"] || "").toString().trim());
-
-            // Filter for this Trigram and ensure Team ID hasn't been submitted yet
-            const pendingTeams = assignments.filter(row => 
-                (row["Trigram"] || "").toString().toLowerCase().trim() === tri && 
-                !evaluatedIDs.includes((row["Team ID"] || "").toString().trim())
-            );
-
-            const list = document.getElementById('teamList'); list.innerHTML = "";
-            if (pendingTeams.length === 0) {
-                alert("No pending teams found for your Trigram!");
-            } else {
-                document.getElementById('loginModal').style.display = 'none'; 
-                document.getElementById('teamModal').style.display = 'flex';
-                pendingTeams.forEach(t => {
-                    const div = document.createElement('div'); div.className = 'team-item';
-                    div.innerHTML = `<strong>ID: ${t["Team ID"]}</strong><br>${t["Team Name"] || 'Aakruti Project'}`;
-                    div.onclick = () => window.location.href = `prefilled_evaluation.html?teamID=${encodeURIComponent(t["Team ID"])}&evaluator=${encodeURIComponent(tri)}&fullName=${encodeURIComponent(name)}`;
-                    list.appendChild(div);
-                });
+            if (tbody) {
+                tbody.innerHTML = Object.entries(countryCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([n, v]) => `<tr><td>${n}</td><td>${v}</td></tr>`)
+                    .join('');
             }
-        } catch (e) { alert("Connectivity Error."); } finally { btn.innerText = "Find My Teams"; btn.disabled = false; }
+            
+            updateCharts(themeCounts, evaluatedData.length, Math.max(0, assignments.length - evaluatedData.length));
+        } catch (e) {
+            console.warn("Dashboard sync pending...");
+        }
+    }
+
+    function updateCharts(themeCounts, evaluated, pending) {
+        const tCanvas = document.getElementById("themeChart");
+        if (tCanvas) {
+            if (themeChart) themeChart.destroy();
+            themeChart = new Chart(tCanvas.getContext("2d"), {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(themeCounts),
+                    datasets: [{ data: Object.values(themeCounts), backgroundColor: ["#007bff", "#28a745", "#ffc107", "#dc3545", "#6f42c1", "#20c997"] }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } } }
+            });
+        }
+
+        const pCanvas = document.getElementById("progressChart");
+        if (pCanvas) {
+            if (progressChart) progressChart.destroy();
+            progressChart = new Chart(pCanvas.getContext("2d"), {
+                type: 'pie',
+                data: {
+                    labels: ['Evaluated', 'Pending'],
+                    datasets: [{ data: [evaluated, pending], backgroundColor: ["#28a745", "#e9ecef"] }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } } }
+            });
+        }
     }
 
     window.onload = function() {
         loadDashboard();
-        setInterval(loadDashboard, 1500); // Live dashboard refresh
-        
-        // Handle Auto-Return after evaluation
+        setInterval(loadDashboard, 1000);
         const params = new URLSearchParams(window.location.search);
         if (params.get('relog') === 'true') {
-            document.getElementById('evalFullName').value = params.get('name');
-            document.getElementById('evalTrigram').value = params.get('tri');
-            fetchAssignments();
+            const nameField = document.getElementById('evalFullName');
+            const triField = document.getElementById('evalTrigram');
+            if (nameField && triField) {
+                nameField.value = params.get('name');
+                triField.value = params.get('tri');
+                fetchAssignments();
+            }
         }
     };
 </script>
